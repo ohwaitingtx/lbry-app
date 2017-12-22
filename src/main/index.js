@@ -1,6 +1,6 @@
 // Module imports
 const {app, BrowserWindow, ipcMain, Menu, Tray, globalShortcut} = require('electron');
-const { autoUpdater } = require('electron-updater');
+//const { autoUpdater } = require('electron-updater');
 const log = require('electron-log');
 const path = require('path');
 const url = require('url');
@@ -39,7 +39,7 @@ if (isDevelopment) {
 
 // For now, log info messages in production for easier debugging of built apps
 log.transports.file.level = 'info';
-autoUpdater.autoDownload = true;
+//autoUpdater.autoDownload = true;
 
 
 // Misc constants
@@ -550,10 +550,10 @@ ipcMain.on('version-info-requested', () => {
   });
 });
 
-ipcMain.on('autoUpdate', () => {
-  minimize = false;
-  autoUpdater.quitAndInstall();
-});
+// ipcMain.on('autoUpdate', () => {
+//   minimize = false;
+//   autoUpdater.quitAndInstall();
+// });
 
 ipcMain.on('get-auth-token', (event) => {
   keytar.getPassword("LBRY", "auth_token").then(token => {
