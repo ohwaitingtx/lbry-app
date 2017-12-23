@@ -2,8 +2,6 @@
   margin-left: auto;
   margin-right: auto;
   max-width: var(--card-max-width);
-  background: var(--card-bg);
-  box-shadow: var(--box-shadow-layer);
   border-radius: var(--card-radius);
   margin-bottom: var(--card-margin);
   overflow: auto;
@@ -12,30 +10,31 @@
   //below added to prevent scrollbar on long titles when show page loads, would prefer a cleaner CSS solution
   overflow-x: hidden;
 }
-.card--obscured
-{
+.card--obscured {
   position: relative;
 }
+
 .card--obscured .card__inner {
   filter: blur( var(--nsfw-blur-intensity) );
 }
-.card__title-primary,
-.card__title-identity,
-.card__content,
-.card__subtext,
-.card__actions {
-  padding: 0 var(--card-padding);
-}
 
-.card--small {
-  .card__title-primary,
-  .card__title-identity,
-  .card__actions,
-  .card__content,
-  .card__subtext {
-    padding: 0 calc(var(--card-padding) / 2);
-  }
-}
+// .card__title-primary,
+// .card__title-identity,
+// .card__content,
+// .card__subtext,
+// .card__actions {
+//   padding: 0 var(--card-padding);
+// }
+
+// .card--small {
+//   .card__title-primary,
+//   .card__title-identity,
+//   .card__actions,
+//   .card__content,
+//   .card__subtext {
+//     padding: 0 calc(var(--card-padding) / 2);
+//   }
+// }
 .card__title-primary {
   margin-top: var(--card-margin);
   margin-bottom: var(--card-margin);
@@ -52,7 +51,6 @@
   margin-top: var(--card-margin);
   margin-bottom: var(--card-margin);
   user-select: none;
-
 }
 .card__actions--bottom {
   margin-top: $spacing-vertical * 1/3;
@@ -116,21 +114,24 @@ $font-size-subtext-multiple: 0.82;
   display: block;
   cursor: pointer;
 }
+
 .card--link {
-  transition: transform 0.2s  var(--animation-style);
+  // transition: transform 0.2s  var(--animation-style);
 }
+
 .card--link:hover {
-  position: relative;
-  z-index: 1;
-  box-shadow: var(--box-shadow-focus);
-  transform: scale(var(--card-link-scaling)) translateX(var(--card-hover-translate));
-  transform-origin: 50% 50%;
-  overflow-x: visible;
-  overflow-y: visible
+  // position: relative;
+  // z-index: 1;
+  // box-shadow: var(--box-shadow-focus);
+
+  // transform-origin: 50% 50%;
+  // overflow-x: visible;
+  // overflow-y: visible
 }
-.card--link:hover ~ .card--link {
-  transform: translateX(calc(var(--card-hover-translate) * 2));
-}
+//
+// .card--link:hover ~ .card--link {
+//   transform: translateX(calc(var(--card-hover-translate) * 2));
+// }
 
 .card__media {
   background-size: cover;
@@ -190,85 +191,53 @@ $font-size-subtext-multiple: 0.82;
   padding: $spacing-vertical / 2;
 }
 
+/*
+ .card-row is used on the discover page/subscriptions
+ It is a list of cards that extend past the right edge of the screen
+ There may be left/right arrows to scroll the cards and view hidden content
+*/
 .card-row {
-  + .card-row {
-    margin-top: $spacing-vertical * 1/3;
-  }
-}
-
-.card-row__placeholder {
-  padding-bottom: $spacing-vertical;
-}
-
-$padding-top-card-hover-hack: 20px;
-$padding-right-card-hover-hack: 30px;
-
-.card-row__items {
-  width: 100%;
-  overflow: hidden;
-
-  /*hacky way to give space for hover */
-  padding-top: $padding-top-card-hover-hack;
-  margin-top: -1 * $padding-top-card-hover-hack;
-  padding-right: $padding-right-card-hover-hack;
-  margin-right: -1 * $padding-right-card-hover-hack;
-  > .card {
-    vertical-align: top;
-    display: inline-block;
-  }
-  > .card + .card {
-    margin-left: 16px;
-  }
-}
-
-.card-row--small {
   overflow: hidden;
   white-space: nowrap;
   width: 100%;
   min-width: var(--card-small-width);
-  margin-right: $spacing-vertical;
+  padding: $spacing-vertical * 2/3 0;
+  // only padding left
+  // cards will extend off the screen on the right side
+  padding-left: $spacing-vertical * 2/3;
 }
+
 .card-row__header {
-  margin-bottom: 16px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.card-row__title {
+  font-weight: 600;
+}
+
+.card-row__actions {
+  // align-self: flex-end;
 }
 
 .card-row__scrollhouse {
-  position: relative;
+  // position: relative;
+  padding-top: $spacing-vertical / 2;
+  width: 100%;
+  overflow: hidden;
+
   /*hacky way to give space for hover */
-  padding-right: $padding-right-card-hover-hack;
-}
-
-.card-row__nav {
-
-  position: absolute;
-  padding: 0 var(--card-margin);
-  height: 100%;
-  top: calc( $padding-top-card-hover-hack - var(--card-margin) );
-}
-.card-row__nav .card-row__scroll-button {
-  background: var(--card-bg);
-  color: var(--color-help);
-  box-shadow: var(--box-shadow-layer);
-  padding: $spacing-vertical $spacing-vertical / 2;
-  position: absolute;
-  cursor: pointer;
-  left: 0;
-  top: 36%;
-  z-index: 2;
-  opacity: 0.8;
-  transition: transform 0.2s var(--animation-style);
-
-  &:hover {
-    opacity: 1.0;
-    transform: scale(calc( var(--card-link-scaling) * 1.1));
+  > .card {
+    position: relative;
+    vertical-align: top;
+    display: inline-block;
+  }
+  > .card + .card {
+    margin-left: $spacing-vertical * 2/3;
   }
 }
-.card-row__nav--left {
-  left: 0;
-}
-.card-row__nav--right {
-  right: 0;
-}
+
 
 /*
 if we keep doing things like this, we should add a real grid system, but I'm going to be a selective dick about it - Jeremy

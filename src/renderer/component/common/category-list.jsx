@@ -4,9 +4,6 @@ import FileCard from "component/fileCard";
 import { Icon } from "component/common.js";
 import Button from "component/button";
 
-// TODO I can use refs
-import ReactDOM from "react-dom";
-
 class CategoryList extends React.PureComponent {
   constructor() {
     super();
@@ -25,7 +22,7 @@ class CategoryList extends React.PureComponent {
   }
 
   componentDidMount() {
-    const cardRow = ReactDOM.findDOMNode(this.refs.rowitems);
+    const cardRow = this.refs.rowItems;
     const cards = cardRow.getElementsByTagName("section");
 
     // check if the last card is visible
@@ -39,83 +36,105 @@ class CategoryList extends React.PureComponent {
     }
   }
 
+  handleScroll(cardRow, scrollTarget) {
+    const cards = cardRow.getElementsByTagName("section");
+    // debugger;
+    const animationCallback = timeToScroll => {
+      // check the last card
+      // if it's fully visible, users can't scroll next
+      setTimeout(() => {
+        const firstCard = cards[0];
+        const lastCard = cards[cards.length - 1];
+        const firstCardVisible = this.isCardVisible(firstCard, cardRow, false);
+        const lastCardVisible = this.isCardVisible(lastCard, cardRow, false);
+
+        this.setState({
+          canScrollNext: !lastCardVisible,
+          canScrollPrevious: !firstCardVisible,
+        });
+      }, timeToScroll);
+    };
+    // debugger;
+    this.scrollCardsAnimated(cardRow, scrollTarget, 200, animationCallback);
+  }
+
   handleScrollPrevious() {
-    const cardRow = ReactDOM.findDOMNode(this.refs.rowitems);
-    if (cardRow.scrollLeft > 0) {
-      // check the visible cards
-      const cards = cardRow.getElementsByTagName("section");
-      let firstVisibleCard = null;
-      let firstVisibleIdx = -1;
-      for (var i = 0; i < cards.length; i++) {
-        if (this.isCardVisible(cards[i], cardRow, false)) {
-          firstVisibleCard = cards[i];
-          firstVisibleIdx = i;
-          break;
+    const cardRow = this.refs.rowItems;
+    const cards = cardRow.getElementsByTagName("section");
+
+    let lastVisibleCard;
+    let numberOfCardsThatCanFit = 1;
+    let newScrollTarget;
+
+    // loop starting at the end to find how many visible cards can fit on the screen
+    // This is kind of weird, there should be a simpler way
+    for (var i = cards.length - 1; i >= 0; i--) {
+      const currentCard = cards[i];
+      const currentCardVisible = this.isCardVisible(cards[i], cardRow);
+      if (lastVisibleCard && currentCardVisible) {
+        numberOfCardsThatCanFit++;
+      } else if (lastVisibleCard && !currentCardVisible) {
+        // TODO: i + 1? kind of weird
+        // it's because we are now past the last card on screen
+        // i = index of first card not on screen
+        // we don't care about this one, just the number that fit
+        const cardIndexToScrollTo = i + 1 - numberOfCardsThatCanFit;
+        const newFirstCard = cards[cardIndexToScrollTo];
+        const scrollTarget = newFirstCard.offsetLeft - 16;
+        this.handleScroll(cardRow, scrollTarget);
+        break;
+      } else {
+        if (currentCardVisible) {
+          lastVisibleCard = cards[i];
         }
       }
-
-      const numDisplayed = this.numDisplayedCards(cardRow);
-      const scrollToIdx = firstVisibleIdx - numDisplayed;
-      const animationCallback = () => {
-        this.setState({
-          canScrollPrevious: cardRow.scrollLeft !== 0,
-          canScrollNext: true,
-        });
-      };
-      this.scrollCardItemsLeftAnimated(
-        cardRow,
-        scrollToIdx < 0 ? 0 : cards[scrollToIdx].offsetLeft,
-        100,
-        animationCallback
-      );
     }
   }
 
   handleScrollNext() {
-    const cardRow = ReactDOM.findDOMNode(this.refs.rowitems);
+    const cardRow = this.refs.rowItems;
 
-    // check the visible cards
+    // loop through the cards to find the first semi-visible card
+    // that is where we need to scroll to
     const cards = cardRow.getElementsByTagName("section");
-    let lastVisibleCard = null;
-    let lastVisibleIdx = -1;
+
+    // loop over items until we find one that is on the screen, then start checking
+    // for the next one not fully visible, this is the new target
+    // let hasFoundVisibleCard;
+    let firstFullVisibleCard;
+    let firstSemiVisibleCard;
+
     for (var i = 0; i < cards.length; i++) {
-      if (this.isCardVisible(cards[i], cardRow, true)) {
-        lastVisibleCard = cards[i];
-        lastVisibleIdx = i;
+      if (firstFullVisibleCard) {
+        const isSemiVis = !this.isCardVisible(cards[i], cardRow);
+        if (isSemiVis) {
+          firstSemiVisibleCard = cards[i];
+          break;
+        }
+      } else {
+        if (this.isCardVisible(cards[i], cardRow)) {
+          firstFullVisibleCard = cards[i];
+        }
       }
     }
 
-    if (lastVisibleCard) {
-      const numDisplayed = this.numDisplayedCards(cardRow);
-      const animationCallback = () => {
-        // update last visible index after scroll
-        for (var i = 0; i < cards.length; i++) {
-          if (this.isCardVisible(cards[i], cardRow, true)) {
-            lastVisibleIdx = i;
-          }
-        }
-
-        this.setState({ canScrollPrevious: true });
-        if (lastVisibleIdx === cards.length - 1) {
-          this.setState({ canScrollNext: false });
-        }
-      };
-
-      this.scrollCardItemsLeftAnimated(
-        cardRow,
-        Math.min(
-          lastVisibleCard.offsetLeft,
-          cardRow.scrollWidth - cardRow.clientWidth
-        ),
-        100,
-        animationCallback
-      );
-    }
+    //TODO: fix this (16 is the left padding)
+    const scrollTarget = firstSemiVisibleCard.offsetLeft - 16;
+    this.handleScroll(cardRow, scrollTarget);
   }
 
-  scrollCardItemsLeftAnimated(cardRow, target, duration, callback) {
+  isCardVisible(section, cardRow) {
+    // check if a card is fully or partial visible horizontally
+    //TODO: handle partial visibility (do we need this?)
+    const rect = section.getBoundingClientRect();
+    const isVisible = rect.left >= 0 && rect.right <= window.innerWidth;
+    // debugger;
+    return isVisible;
+  }
+
+  scrollCardsAnimated(cardRow, scrollTarget, duration, callback) {
     if (!duration || duration <= diff) {
-      cardRow.scrollLeft = target;
+      cardRow.scrollLeft = scrollTarget;
       if (callback) {
         callback();
       }
@@ -123,114 +142,80 @@ class CategoryList extends React.PureComponent {
     }
 
     const component = this;
-    const diff = target - cardRow.scrollLeft;
+    const diff = scrollTarget - cardRow.scrollLeft;
     const tick = diff / duration * 10;
     setTimeout(() => {
       cardRow.scrollLeft = cardRow.scrollLeft + tick;
-      if (cardRow.scrollLeft === target) {
+      if (cardRow.scrollLeft === scrollTarget) {
         if (callback) {
           callback();
         }
         return;
       }
-      component.scrollCardItemsLeftAnimated(
+      component.scrollCardsAnimated(
         cardRow,
-        target,
+        scrollTarget,
         duration - 10,
         callback
       );
     }, 10);
   }
 
-  isCardVisible(section, cardRow, partialVisibility) {
-    // check if a card is fully or partialy visible in its parent
-    const cardRowWidth = cardRow.offsetWidth;
-    const cardRowLeft = cardRow.scrollLeft;
-    const cardRowEnd = cardRowLeft + cardRow.offsetWidth;
-    const sectionLeft = section.offsetLeft - cardRowLeft;
-    const sectionEnd = sectionLeft + section.offsetWidth;
-
-    return (
-      (sectionLeft >= 0 && sectionEnd <= cardRowWidth) ||
-      (((sectionLeft < 0 && sectionEnd > 0) ||
-        (sectionLeft > 0 && sectionLeft <= cardRowWidth)) &&
-        partialVisibility)
-    );
-  }
-
-  numDisplayedCards(cardRow) {
-    const cards = cardRow.getElementsByTagName("section");
-    const cardRowWidth = cardRow.offsetWidth;
-    // get the width of the first card and then calculate
-    const cardWidth = cards.length > 0 ? cards[0].offsetWidth : 0;
-
-    if (cardWidth > 0) {
-      return Math.ceil(cardRowWidth / cardWidth);
-    }
-
-    // return a default value of 1 card displayed if the card width couldn't be determined
-    return 1;
-  }
-
   render() {
     const { category, names, categoryLink } = this.props;
 
     return (
-      <div className="card-row card-row--small">
-        <h3 className="card-row__header">
-          {categoryLink ? (
-            <Button
-              className="button-text no-underline"
-              label={category}
-              navigate="/show"
-              navigateParams={{ uri: categoryLink }}
-            />
-          ) : (
-            category
-          )}
-
-          {category &&
-            category.match(/^community/i) && (
-              <ToolTip
-                label={__("What's this?")}
-                body={__(
-                  'Community Content is a public space where anyone can share content with the rest of the LBRY community. Bid on the names "one," "two," "three," "four" and "five" to put your content here!'
-                )}
-                className="tooltip--header"
+      <div className="card-row">
+        <div className="card-row__header">
+          <h3 className="card-row__title">
+            {categoryLink ? (
+              <Button
+                className="button-text no-underline"
+                label={category}
+                navigate="/show"
+                navigateParams={{ uri: categoryLink }}
               />
+            ) : (
+              category
             )}
-        </h3>
-        {this.state.canScrollPrevious && (
-          <div className="card-row__nav card-row__nav--left">
-            <a
-              className="card-row__scroll-button"
-              onClick={this.handleScrollPrevious.bind(this)}
-            >
-              <Icon icon="icon-chevron-left" />
-            </a>
-          </div>
-        )}
-        {this.state.canScrollNext && (
-          <div className="card-row__nav card-row__nav--right">
-            <a
-              className="card-row__scroll-button"
-              onClick={this.handleScrollNext.bind(this)}
-            >
-              <Icon icon="icon-chevron-right" />
-            </a>
-          </div>
-        )}
-        <div className="card-row__scrollhouse">
-          <div ref="rowitems" className="card-row__items">
-            {names &&
-              names.map(name => (
-                <FileCard
-                  key={name}
-                  displayStyle="card"
-                  uri={lbryuri.normalize(name)}
+
+            {category &&
+              category.match(/^community/i) && (
+                <ToolTip
+                  label={__("What's this?")}
+                  body={__(
+                    'Community Content is a public space where anyone can share content with the rest of the LBRY community. Bid on the names "one," "two," "three," "four" and "five" to put your content here!'
+                  )}
+                  className="tooltip--header"
                 />
-              ))}
+              )}
+          </h3>
+          <div className="card-row__actions">
+            <Button
+              inverse
+              circle
+              disabled={!this.state.canScrollPrevious}
+              onClick={this.handleScrollPrevious.bind(this)}
+              icon="chevron-left"
+            />
+            <Button
+              inverse
+              circle
+              disabled={!this.state.canScrollNext}
+              onClick={this.handleScrollNext.bind(this)}
+              icon="chevron-right"
+            />
           </div>
+        </div>
+        <div ref="rowItems" className="card-row__scrollhouse">
+          {names &&
+            names.map(name => (
+              <FileCard
+                key={name}
+                displayStyle="card"
+                uri={lbryuri.normalize(name)}
+              />
+            ))}
         </div>
       </div>
     );

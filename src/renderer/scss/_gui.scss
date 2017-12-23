@@ -17,6 +17,13 @@
 
 @font-face {
   font-family: 'Metropolis';
+  font-weight: 600;
+  font-style: normal;
+  src: url('../../../static/font/metropolis/Metropolis-SemiBold.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Metropolis';
   font-weight: normal;
   font-style: italic;
   src: url('../../../static/font/metropolis/Metropolis-MediumItalic.woff2') format('woff2');
@@ -67,7 +74,7 @@ body {
 }
 
 .page__title {
-  padding: 20px 0;
+  padding: $spacing-vertical / 2 0;
 }
 
 .credit-amount--indicator

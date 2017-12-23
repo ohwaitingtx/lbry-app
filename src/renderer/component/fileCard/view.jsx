@@ -9,6 +9,7 @@ import UriIndicator from "component/uriIndicator";
 import NsfwOverlay from "component/nsfwOverlay";
 import TruncatedMarkdown from "component/truncatedMarkdown";
 import * as icons from "constants/icons";
+import classnames from "classnames";
 
 class FileCard extends React.Component {
   constructor(props) {
@@ -76,10 +77,9 @@ class FileCard extends React.Component {
 
     return (
       <section
-        className={
-          "card card--small card--link " +
-          (obscureNsfw ? "card--obscured " : "")
-        }
+        className={classnames("card card--small card--link", {
+          "card--obscured": obscureNsfw,
+        })}
         onMouseEnter={this.handleMouseOver.bind(this)}
         onMouseLeave={this.handleMouseOut.bind(this)}
       >
@@ -105,11 +105,6 @@ class FileCard extends React.Component {
               </div>
             </div>
           </div>
-          {/* Test for nizuka's design: should we remove description?
-            <div className="card__content card__subtext card__subtext--two-lines">
-              <TruncatedMarkdown lines={2}>{description}</TruncatedMarkdown>
-            </div>
-            */}
         </div>
         {obscureNsfw && this.state.hovered && <NsfwOverlay />}
       </section>
